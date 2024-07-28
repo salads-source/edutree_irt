@@ -1,10 +1,12 @@
 import unittest
-import requests
 import json
-
-BASE_URL = "http://localhost:5000"
+from app import app
 
 class TestCliFunctions(unittest.TestCase):
+
+    def setUp(self):
+        self.app = app.test_client()
+        self.app.testing = True
 
     def test_store_quiz(self):
         # Example quiz data
@@ -18,13 +20,13 @@ class TestCliFunctions(unittest.TestCase):
         }
 
         # Send POST request to store quiz
-        response = requests.post(f"{BASE_URL}/store_quiz", json=quiz_data)
+        response = self.app.post('/store_quiz', data=json.dumps(quiz_data), content_type='application/json')
         
         # Check response status
         self.assertEqual(response.status_code, 200)
         
         # Check response data
-        response_data = response.json()
+        response_data = json.loads(response.data)
         self.assertIn('message', response_data)
         self.assertIsInstance(response_data['message'], dict)
         self.assertIn('101', response_data['message'])  # Adjusted to check for string key
@@ -71,7 +73,7 @@ class TestCliFunctions(unittest.TestCase):
         }
 
         # Store the quiz data first
-        store_response = requests.post(f"{BASE_URL}/store_quiz", json=quiz_data)
+        store_response = self.app.post('/store_quiz', data=json.dumps(quiz_data), content_type='application/json')
         self.assertEqual(store_response.status_code, 200)
 
         # Example request data for next question
@@ -85,13 +87,13 @@ class TestCliFunctions(unittest.TestCase):
         }
 
         # Send POST request to get next question
-        response = requests.post(f"{BASE_URL}/next_question", json=request_data)
+        response = self.app.post('/next_question', data=json.dumps(request_data), content_type='application/json')
         
         # Check response status
         self.assertEqual(response.status_code, 200)
         
         # Check response data
-        response_data = response.json()
+        response_data = json.loads(response.data)
         self.assertIn('question_text', response_data)
         self.assertIn('item_index', response_data)
         self.assertIn('est_theta', response_data)
