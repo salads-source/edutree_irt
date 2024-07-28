@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 
 BASE_URL = "http://localhost:5000"
-CSV_FILE_PATH = 'C:/Users/user/python_projects/item_response_theory/S08_question_answer_pairs_cleaned.csv'
+CSV_FILE_PATH = 'C:/Users/user/python_projects/edutree_irt/S08_question_answer_pairs_cleaned.csv'
 
 # Function to store the quiz
 def store_quiz(quiz_data):

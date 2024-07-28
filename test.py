@@ -1,6 +1,9 @@
+
 import numpy as np
 from catsim.initialization import FixedPointInitializer
 from catsim.selection import MaxInfoSelector
+from catsim.selection import UrrySelector
+from catsim.selection import RandomSelector
 from catsim.estimation import NumericalSearchEstimator
 from catsim.irt import icc
 import random
@@ -18,14 +21,17 @@ difficulty_mapping = {
     'hard': 2.0
 }
 
+selector = RandomSelector()
+estimator = NumericalSearchEstimator()
+
 # Function to initialize the item parameters from the question bank
 def initialize_item_parameters(questions):
     num_items = len(questions)
     discrimination = np.random.uniform(0.5, 2.0, num_items)  # discrimination parameter (a)
-    difficulty = [difficulty_mapping[q['difficulty']] for q in questions]  # map difficulty to (b)
+    difficulty = np.array([difficulty_mapping[q['difficulty']] for q in questions])  # map difficulty to (b)
     guessing = np.random.uniform(0.1, 0.3, num_items)  # guessing parameter (c)
     upper_asymptote = np.ones(num_items)  # upper_asymptote parameter (d)
-    exposure_rate = np.zeros(num_items)  # item exposure rate
+    # exposure_rate = np.zeros(num_items)  # item exposure rate
     parameters = np.column_stack((discrimination, difficulty, guessing, upper_asymptote))
     return parameters
 
@@ -51,8 +57,8 @@ def get_next_question(quiz_id, student_id, topic, est_theta, administered_items,
     topic_item_indices = [i for i, q in enumerate(questions) if q['concept'] == topic]
     topic_item_parameters = item_parameters[quiz_id][topic_item_indices]
 
-    selector = MaxInfoSelector()
-    estimator = NumericalSearchEstimator()
+    # selector = UrrySelector(r_max=0.2)
+    # estimator = NumericalSearchEstimator()
 
     # Process the current question
     if current_question_id is not None:
@@ -103,7 +109,7 @@ def get_next_question(quiz_id, student_id, topic, est_theta, administered_items,
     print(topic_item_parameters, file=sys.stderr)
     # print(topic_questions, file=sys.stderr)
 
-    question_text = topic_questions[item_index]['question_details']
+    question_text = topic_questions[item_index - 1]['question_details']
     print(question_text, file=sys.stderr)
 
     return topic, topic_item_indices[item_index], question_text, float(est_theta)
@@ -125,7 +131,7 @@ def handle_next_question(request_data):
         topic = topics[0]
 
     topic, item_index, question_text, est_theta = get_next_question(quiz_id, student_id, topic, est_theta, administered_items, responses, current_question_id, answer)
-
+    print(item_index, file=sys.stderr)
     if item_index is None:
         return {
             'status': 'completed',
@@ -142,4 +148,3 @@ def handle_next_question(request_data):
         'topic': topic,
         'topics_attempted': student_progress[quiz_id][student_id]["topics_attempted"]
     }
-
